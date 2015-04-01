@@ -1,0 +1,335 @@
+#!/bin/bash
+
+# defaults
+#########################
+_source=`pwd`
+_destination="/src"
+_image="jmervine/vimrc"
+_rm="true"
+
+function parg {
+  local sopt="$1"
+  local lopt="$2"
+  local desc="$3"
+
+  [[ -z "$desc" ]] \
+    && desc="see 'docker run --help' for details"
+
+  if [ -z "$sopt" ]; then
+    printf '      --%-14s %s\n' "$lopt" "$desc"
+  else
+    printf '  -%s, --%-14s %s\n' "$sopt" "$lopt" "$desc"
+  fi
+}
+
+function options_printer {
+  parg "s" "source"        "local host source directory"
+  parg "d" "destination"   "remote host source directory"
+  parg "i" "image"         "image"
+  parg "w" "workdir"
+  parg "n" "name"
+  parg "N" "net"
+  parg "r" "rm"
+  parg ""  "cpuset"
+  parg ""  "memory"
+  parg "v" "volumes"
+  parg ""  "volumes-from"
+  parg "D" "dryrun"        "only print what would be executed"
+}
+
+function show_help {
+  echo "Usage: $0 [options] [-- command]
+
+Simple wraper for quickly spooling up docker comtainers a development
+environments.
+
+  Templates:
+  - vim     jmervine/vimrc:latest
+  - node    node:latest
+  - ruby    ruby:latest
+  - rails   rails:latest
+  - python  python:2
+  - golang  golang:latest
+
+  Options:
+$(options_printer)
+
+  Defaults:
+  - source       '${_source}'
+  - destination  '${_destination}'
+  - image        '${_image}'
+  - rm           '${_rm}'
+  - workdir      destination directory
+"
+}
+
+function messing_arg_error {
+  local arg=$1
+  printf 'ERROR: Missing value for %s\n-----\n' "$arg"
+  show_help
+  exit
+}
+
+# handle templates
+if [ "$#" -eq 1 ]; then
+  _found='true'
+  case "$@" in
+    vim|vimrc)
+      _image="jmervine/vimrc:latest";;
+    ruby|rb)
+      _image="ruby:latest";;
+    rails)
+      _image="rails:latest";;
+    python|py)
+      _image="python:2";;
+    node|nodejs)
+      _image="node:latest";;
+    go|golang)
+      _image="golang:latest";;
+    *)
+      unset _found;;
+  esac
+fi
+
+if [ -z "${_found}" ]; then
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      -h|-\?|--help)
+        show_help
+        exit
+        ;;
+
+      # source
+      -s|--source)
+        if [ "$#" -gt 1 ]; then
+          _source=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "source"
+        fi
+        ;;
+      --source=?*)
+        _source=${1#*=};;
+      --source=)
+        missing_arg_error "source";;
+
+      # destination
+      -d|--destination)
+        if [ "$#" -gt 1 ]; then
+          _destination=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "destination"
+        fi
+        ;;
+      --destination=?*)
+        _destination=${1#*=};;
+      --destination=)
+          missing_arg_error "destination";;
+
+      # image
+      -i|--image)
+        if [ "$#" -gt 1 ]; then
+          _image=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "image"
+        fi
+        ;;
+      --image=?*)
+        _image=${1#*=};;
+      --image=)
+          missing_arg_error "image";;
+
+      # workdir
+      -w|--workdir)
+        if [ "$#" -gt 1 ]; then
+          _workdir=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "workdir"
+        fi
+        ;;
+      --workdir=?*)
+        _workdir=${1#*=};;
+      --workdir=)
+          missing_arg_error "workdir";;
+
+      # name
+      -n|--name)
+        if [ "$#" -gt 1 ]; then
+          _name=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "name"
+        fi
+        ;;
+      --name=?*)
+        _name=${1#*=};;
+      --name=)
+          missing_arg_error "name";;
+
+      # net
+      -N|--net)
+        if [ "$#" -gt 1 ]; then
+          _net=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "net"
+        fi
+        ;;
+      --net=?*)
+        _net=${1#*=};;
+      --net=)
+          missing_arg_error "net";;
+
+      # rm
+      -r|--rm)
+          _rm='true'
+          shift
+          continue;;
+
+      # dryrun
+      -D|--dryrun)
+          _dryrun='true'
+          shift
+          continue;;
+
+      # cpuset
+      --cpuset)
+        if [ "$#" -gt 1 ]; then
+          _cpuset=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "cpuset"
+        fi
+        ;;
+      --cpuset=?*)
+        _cpuset=${1#*=};;
+      --cpuset=)
+          missing_arg_error "cpuset";;
+
+      # memory
+      --memory)
+        if [ "$#" -gt 1 ]; then
+          _memory=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "memory"
+        fi
+        ;;
+      --memory=?*)
+        _memory=${1#*=};;
+      --memory=)
+          missing_arg_error "memory";;
+
+      # volumes
+      -v|--volumes)
+        if [ "$#" -gt 1 ]; then
+          _volumes=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "volumes"
+        fi
+        ;;
+      --volumes=?*)
+        _volumes=${1#*=};;
+      --volumes=)
+          missing_arg_error "volumes";;
+
+      # volumes_from
+      --volumes-from)
+        if [ "$#" -gt 1 ]; then
+          _volumes-from=$2
+          shift 2
+          continue
+        else
+          missing_arg_error "volumes-from"
+        fi
+        ;;
+      --volumes-from=?*)
+        _volumes-from=${1#*=};;
+      --volumes-from=)
+          missing_arg_error "volumes-from";;
+
+      --)
+        shift
+        break;;
+
+      -?*)
+        printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+        shift;;
+
+      *)
+        shift;;
+    esac
+  done
+
+  if [ "$#" -gt 0 ]; then
+    _command=$@
+  fi
+fi
+
+docker="docker run -it"
+
+if [ -z "${_workdir}" ]; then
+  docker="${docker} --workdir=${_destination}"
+else
+  docker="${docker} --workdir=${_workdir}"
+fi
+
+[[ "${_rm}" = "true" ]] \
+  && docker="${docker} --rm"
+
+[[ -z "${_name}" ]] \
+  || docker="${docker} --name=${_name}"
+
+[[ -z "${_net}" ]] \
+  || docker="${docker} --net=${_net}"
+
+[[ -z "${_cpuset}" ]] \
+  || docker="${docker} --cpuset=${_cpuset}"
+
+[[ -z "${_memory}" ]] \
+  || docker="${docker} --memory=${_memory}"
+
+[[ -z "${_destination}" ]] \
+  && docker="${docker} --volume=${_source}"
+
+[[ -z "${_destination}" ]] \
+  || docker="${docker} --volume=${_source}:${_destination}"
+
+if [[ ! -z "${_volumes}" ]]; then
+  for v in $(echo ${_volumes}); do
+    vols="${vols} --volume=${v}"
+  done
+  docker="${docker} ${vols}"
+fi
+
+if [[ ! -z "${_volumes_from}" ]]; then
+  for v in $(echo ${_volumes_from}); do
+    vols="${vols} --volumes-from=${v}"
+  done
+  docker="${docker} ${vols}"
+fi
+
+docker="${docker} ${_image}"
+
+[[ -z "${_command}" ]] \
+  || docker="${docker} ${_command}"
+
+echo "+ $docker"
+
+([[ -z "${_dryrun}" ]] \
+  && exec $docker) || true
+
+# vim: ft=sh
