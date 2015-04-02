@@ -3,7 +3,11 @@ Simple docker wrapper for quickly spooling up containerized development environm
 
 ## Install
 
-```bash
+> Install Docker, of course
+>
+> * https://docs.docker.com/installation/
+
+```text
 mkdir -p ~/.bin
 curl -sSL https://raw.githubusercontent.com/jmervine/dockme/master/dockme > ~/.bin/dockme
 chmod +x ~/.bin/dockme
@@ -15,7 +19,7 @@ dockme --help
 
 ## Usage
 
-```bash
+```text
 Usage: dockme [options|template] [-- command]
 
 Simple wraper for quickly spooling up docker comtainers a development
@@ -50,7 +54,11 @@ environments.
   - workdir      '/src'
   - rm           'true'
 
+```
 
+## Examples
+
+```text
 # defaults
 $ dockme
 docker run -it --rm --workdir=/src --volume=/path/to/project:/src jmervine/vimrc
@@ -58,13 +66,13 @@ docker run -it --rm --workdir=/src --volume=/path/to/project:/src jmervine/vimrc
 # custom examples
 $ pwd
 /Users/jmervine/Development/dockme
-$ ./dockme -i ruby:latest -- irb
+$ dockme -i ruby:latest -- irb
 + docker run -it --workdir=/src --rm --volume=/Users/jmervine/Development/dockme:/src ruby:latest irb
 irb(main):001:0> `pwd`.strip
 => "/src"
 irb(main):002:0> RUBY_VERSION
 => "2.2.1"
-irb(main):003:0>$ cd /path/to/project
+irb(main):003:0>
 
 # template example
 $ cd /path/to/project
