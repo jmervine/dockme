@@ -7,6 +7,16 @@ _destination="/src"
 _image="jmervine/vimrc"
 _rm="true"
 
+# load configurations
+#########################
+test -e $HOME/.dockmerc \
+  && source $HOME/.dockmerc
+
+test -e $(pwd)/.dockmerc \
+  && source $(pwd)/.dockmerc
+
+# helper methods
+#########################
 function parg {
   local sopt="$1"
   local lopt="$2"
@@ -35,10 +45,11 @@ function options_printer {
   parg "v" "volumes"
   parg ""  "volumes-from"
   parg "D" "dryrun"        "only print what would be executed"
+  parg ""  "save"          "save configuration to local .dockmerc file"
 }
 
 function show_help {
-  echo "Usage: $0 [options] [-- command]
+  echo "Usage: $0 [template] [options] [-- command]
 
 Simple wraper for quickly spooling up docker comtainers a development
 environments.
@@ -51,6 +62,9 @@ environments.
   - python  python:2
   - golang  golang:latest
 
+  Template configurations must be defined as the first argument and are applied
+  and then overwritten by any passed arguments.
+
   Options:
 $(options_printer)
 
@@ -60,6 +74,35 @@ $(options_printer)
   - image        '${_image}'
   - rm           '${_rm}'
   - workdir      destination directory
+
+External Configuration
+
+dockme can be configured via an external file. It will look for a file named
+.dockmerc in your home directory and the current working directory, unless one
+is passed via the configuration argument. *All arguments passed will supersede
+arguments configured by dockmerc files.*
+
+  Configuration Precedence
+
+  > ARGUMENTS
+  --> .dockmerc
+  ----> ~/.dockmerc
+
+  Configuration Sample:
+
+  # file: .dockmerc
+  _source=/path/to/source
+  _destination=/path/to/dest
+  _image=username/image:tag
+  _rm=true
+  _workdir=/path/to/workdir
+  _name=container_name
+  _net=host
+  _cpuset=2
+  _memory=1g
+  _volumes=/some/vol:/some/path
+  _volumes_from=volume_container
+  _command="echo 'a command'"
 "
 }
 
@@ -70,213 +113,263 @@ function messing_arg_error {
   exit
 }
 
+function save_config {
+  echo "# file: .dockmerc" > .dockmerc
+
+  [[ ! -z "${_source}" ]] \
+    && echo "_source=${_source}" >> .dockmerc
+
+  [[ ! -z "${_destination}" ]] \
+    && echo "_destination=${_destination}" >> .dockmerc
+
+  [[ ! -z "${_image}" ]] \
+    && echo "_image=${_image}" >> .dockmerc
+
+  [[ ! -z "${_rm}" ]] \
+    && echo "_rm=${_rm}" >> .dockmerc
+
+  [[ ! -z "${_workdir}" ]] \
+    && echo "_workdir=${_workdir}" >> .dockmerc
+
+  [[ ! -z "${_name}" ]] \
+    && echo "_name=${_name}" >> .dockmerc
+
+  [[ ! -z "${_net}" ]] \
+    && echo "_net=${_net}" >> .dockmerc
+
+  [[ ! -z "${_cpuset}" ]] \
+    && echo "_cpuset=${_cpuset}" >> .dockmerc
+
+  [[ ! -z "${_memory}" ]] \
+    && echo "_memory=${_memory}" >> .dockmerc
+
+  [[ ! -z "${_volumes}" ]] \
+    && echo "_volumes=\"${_volumes}\"" >> .dockmerc
+
+  [[ ! -z "${_volumes_from}" ]] \
+    && echo "_volumes_from=\"${_volumes_from}\"" >> .dockmerc
+
+  [[ ! -z "${_command}" ]] \
+    && echo "_command=${_command}" >> .dockmerc
+
+  echo "+ configuration saved to .dockmerc"
+  cat .dockmerc
+}
+
 # handle templates
-if [ "$#" -eq 1 ]; then
-  _found='true'
-  case "$@" in
+if [ "$#" -gt 0 ]; then
+  case "$1" in
     vim|vimrc)
-      _image="jmervine/vimrc:latest";;
+      _image="jmervine/vimrc:latest"
+      shift;;
     ruby|rb)
-      _image="ruby:latest";;
+      _image="ruby:latest"
+      shift;;
     rails)
-      _image="rails:latest";;
+      _image="rails:latest"
+      shift;;
     python|py)
-      _image="python:2";;
+      _image="python:2"
+      shift;;
     node|nodejs)
-      _image="node:latest";;
+      _image="node:latest"
+      shift;;
     go|golang)
-      _image="golang:latest";;
-    *)
-      unset _found;;
+      _image="golang:latest"
+      shift;;
   esac
 fi
 
-if [ -z "${_found}" ]; then
-  while [ "$#" -gt 0 ]; do
-    case $1 in
-      -h|-\?|--help)
-        show_help
-        exit
-        ;;
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    -h|-\?|--help)
+      show_help
+      exit
+      ;;
 
-      # source
-      -s|--source)
-        if [ "$#" -gt 1 ]; then
-          _source=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "source"
-        fi
-        ;;
-      --source=?*)
-        _source=${1#*=};;
-      --source=)
-        missing_arg_error "source";;
+    # source
+    -s|--source)
+      if [ "$#" -gt 1 ]; then
+        _source=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "source"
+      fi
+      ;;
+    --source=?*)
+      _source=${1#*=};;
+    --source=)
+      missing_arg_error "source";;
 
-      # destination
-      -d|--destination)
-        if [ "$#" -gt 1 ]; then
-          _destination=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "destination"
-        fi
-        ;;
-      --destination=?*)
-        _destination=${1#*=};;
-      --destination=)
-          missing_arg_error "destination";;
+    # destination
+    -d|--destination)
+      if [ "$#" -gt 1 ]; then
+        _destination=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "destination"
+      fi
+      ;;
+    --destination=?*)
+      _destination=${1#*=};;
+    --destination=)
+        missing_arg_error "destination";;
 
-      # image
-      -i|--image)
-        if [ "$#" -gt 1 ]; then
-          _image=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "image"
-        fi
-        ;;
-      --image=?*)
-        _image=${1#*=};;
-      --image=)
-          missing_arg_error "image";;
+    # image
+    -i|--image)
+      if [ "$#" -gt 1 ]; then
+        _image=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "image"
+      fi
+      ;;
+    --image=?*)
+      _image=${1#*=};;
+    --image=)
+        missing_arg_error "image";;
 
-      # workdir
-      -w|--workdir)
-        if [ "$#" -gt 1 ]; then
-          _workdir=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "workdir"
-        fi
-        ;;
-      --workdir=?*)
-        _workdir=${1#*=};;
-      --workdir=)
-          missing_arg_error "workdir";;
+    # workdir
+    -w|--workdir)
+      if [ "$#" -gt 1 ]; then
+        _workdir=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "workdir"
+      fi
+      ;;
+    --workdir=?*)
+      _workdir=${1#*=};;
+    --workdir=)
+        missing_arg_error "workdir";;
 
-      # name
-      -n|--name)
-        if [ "$#" -gt 1 ]; then
-          _name=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "name"
-        fi
-        ;;
-      --name=?*)
-        _name=${1#*=};;
-      --name=)
-          missing_arg_error "name";;
+    # name
+    -n|--name)
+      if [ "$#" -gt 1 ]; then
+        _name=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "name"
+      fi
+      ;;
+    --name=?*)
+      _name=${1#*=};;
+    --name=)
+        missing_arg_error "name";;
 
-      # net
-      -N|--net)
-        if [ "$#" -gt 1 ]; then
-          _net=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "net"
-        fi
-        ;;
-      --net=?*)
-        _net=${1#*=};;
-      --net=)
-          missing_arg_error "net";;
+    # net
+    -N|--net)
+      if [ "$#" -gt 1 ]; then
+        _net=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "net"
+      fi
+      ;;
+    --net=?*)
+      _net=${1#*=};;
+    --net=)
+        missing_arg_error "net";;
 
-      # rm
-      -r|--rm)
-          _rm='true'
-          shift
-          continue;;
-
-      # dryrun
-      -D|--dryrun)
-          _dryrun='true'
-          shift
-          continue;;
-
-      # cpuset
-      --cpuset)
-        if [ "$#" -gt 1 ]; then
-          _cpuset=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "cpuset"
-        fi
-        ;;
-      --cpuset=?*)
-        _cpuset=${1#*=};;
-      --cpuset=)
-          missing_arg_error "cpuset";;
-
-      # memory
-      --memory)
-        if [ "$#" -gt 1 ]; then
-          _memory=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "memory"
-        fi
-        ;;
-      --memory=?*)
-        _memory=${1#*=};;
-      --memory=)
-          missing_arg_error "memory";;
-
-      # volumes
-      -v|--volumes)
-        if [ "$#" -gt 1 ]; then
-          _volumes=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "volumes"
-        fi
-        ;;
-      --volumes=?*)
-        _volumes=${1#*=};;
-      --volumes=)
-          missing_arg_error "volumes";;
-
-      # volumes_from
-      --volumes-from)
-        if [ "$#" -gt 1 ]; then
-          _volumes-from=$2
-          shift 2
-          continue
-        else
-          missing_arg_error "volumes-from"
-        fi
-        ;;
-      --volumes-from=?*)
-        _volumes-from=${1#*=};;
-      --volumes-from=)
-          missing_arg_error "volumes-from";;
-
-      --)
+    # rm
+    -r|--rm)
+        _rm='true'
         shift
-        break;;
+        continue;;
 
-      -?*)
-        printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
-        shift;;
+    # dryrun
+    -D|--dryrun)
+        _dryrun='true'
+        shift
+        continue;;
 
-      *)
-        shift;;
-    esac
-  done
+    # save
+    --save)
+        _save='true'
+        shift
+        continue;;
 
-  if [ "$#" -gt 0 ]; then
-    _command=$@
-  fi
+    # cpuset
+    --cpuset)
+      if [ "$#" -gt 1 ]; then
+        _cpuset=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "cpuset"
+      fi
+      ;;
+    --cpuset=?*)
+      _cpuset=${1#*=};;
+    --cpuset=)
+        missing_arg_error "cpuset";;
+
+    # memory
+    --memory)
+      if [ "$#" -gt 1 ]; then
+        _memory=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "memory"
+      fi
+      ;;
+    --memory=?*)
+      _memory=${1#*=};;
+    --memory=)
+        missing_arg_error "memory";;
+
+    # volumes
+    -v|--volumes)
+      if [ "$#" -gt 1 ]; then
+        _volumes=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "volumes"
+      fi
+      ;;
+    --volumes=?*)
+      _volumes=${1#*=};;
+    --volumes=)
+        missing_arg_error "volumes";;
+
+    # volumes_from
+    --volumes-from)
+      if [ "$#" -gt 1 ]; then
+        _volumes-from=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "volumes-from"
+      fi
+      ;;
+    --volumes-from=?*)
+      _volumes-from=${1#*=};;
+    --volumes-from=)
+        missing_arg_error "volumes-from";;
+
+    --)
+      shift
+      break;;
+
+    -?*)
+      printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+      shift;;
+
+    *)
+      shift;;
+  esac
+done
+
+if [ "$#" -gt 0 ]; then
+  _command=$@
 fi
 
 docker="docker run -it"
@@ -326,6 +419,9 @@ docker="${docker} ${_image}"
 
 [[ -z "${_command}" ]] \
   || docker="${docker} ${_command}"
+
+[[ -z "${_save}" ]] \
+  || save_config
 
 echo "+ $docker"
 
