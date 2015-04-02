@@ -52,21 +52,22 @@ environments.
 
 
 # defaults
-$ cd /path/to/project
 $ dockme
-docker run -it --rm --volume=/path/to/project:/src jmervine/vimrc
+docker run -it --rm --workdir=/src --volume=/path/to/project:/src jmervine/vimrc
 
 # custom examples
-$ cd /path/to/project
-$ dockme -s /another/project -N host -v $(pwd)/.ssh:/root/.ssh -i python:latest -- bash
-docker run -it --rm --volume=/another/project:/src  --net=host --volume=/home/jmervine/.ssh:/root/.ssh python:latest bash
-
-$ cd /path/to/project
-$ dockme -i ruby:latest -- irb
-docker run -it --rm --volume=/path/to/project:/src ruby:latest irb
+$ pwd
+/Users/jmervine/Development/dockme
+$ ./dockme -i ruby:latest -- irb
++ docker run -it --workdir=/src --rm --volume=/Users/jmervine/Development/dockme:/src ruby:latest irb
+irb(main):001:0> `pwd`.strip
+=> "/src"
+irb(main):002:0> RUBY_VERSION
+=> "2.2.1"
+irb(main):003:0>$ cd /path/to/project
 
 # template example
 $ cd /path/to/project
 $ dockme ruby
-docker run -it --rm --volume=/path/to/project:/src ruby:latest
+docker run -it --rm --workdir=/src --volume=/path/to/project:/src ruby:latest
 ```
