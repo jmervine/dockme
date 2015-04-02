@@ -43,6 +43,7 @@ function options_printer {
   parg "n" "name"
   parg "N" "net"
   parg "r" "rm"
+  parg ""  "no-rm"         "do not remove container when finished"
   parg ""  "cpuset"
   parg ""  "memory"
   parg "v" "volumes"
@@ -207,7 +208,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --source=?*)
-      _source=${1#*=};;
+      _source=${1#*=}
+      shift
+      continue;;
     --source=)
       missing_arg_error "source";;
 
@@ -222,7 +225,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --destination=?*)
-      _destination=${1#*=};;
+      _destination=${1#*=}
+      shift
+      continue;;
     --destination=)
         missing_arg_error "destination";;
 
@@ -237,7 +242,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --image=?*)
-      _image=${1#*=};;
+      _image=${1#*=}
+      shift
+      continue;;
     --image=)
         missing_arg_error "image";;
 
@@ -252,7 +259,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --hostname=?*)
-      _hostname=${1#*=};;
+      _hostname=${1#*=}
+      shift
+      continue;;
     --hostname=)
         missing_arg_error "hostname";;
 
@@ -267,7 +276,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --publish=?*)
-      _publish=${1#*=};;
+      _publish=${1#*=}
+      shift
+      continue;;
     --publish=)
         missing_arg_error "publish";;
 
@@ -282,7 +293,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --workdir=?*)
-      _workdir=${1#*=};;
+      _workdir=${1#*=}
+      shift
+      continue;;
     --workdir=)
         missing_arg_error "workdir";;
 
@@ -297,7 +310,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --name=?*)
-      _name=${1#*=};;
+      _name=${1#*=}
+      shift
+      continue;;
     --name=)
         missing_arg_error "name";;
 
@@ -312,9 +327,17 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --net=?*)
-      _net=${1#*=};;
+      _net=${1#*=}
+      shift
+      continue;;
     --net=)
         missing_arg_error "net";;
+
+    # rm
+    --no-rm)
+        unset _rm
+        shift
+        continue;;
 
     # rm
     -r|--rm)
@@ -345,7 +368,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --cpuset=?*)
-      _cpuset=${1#*=};;
+      _cpuset=${1#*=}
+      shift
+      continue;;
     --cpuset=)
         missing_arg_error "cpuset";;
 
@@ -360,7 +385,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --memory=?*)
-      _memory=${1#*=};;
+      _memory=${1#*=}
+      shift
+      continue;;
     --memory=)
         missing_arg_error "memory";;
 
@@ -375,7 +402,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --volumes=?*)
-      _volumes=${1#*=};;
+      _volumes=${1#*=}
+      shift
+      continue;;
     --volumes=)
         missing_arg_error "volumes";;
 
@@ -390,7 +419,9 @@ while [ "$#" -gt 0 ]; do
       fi
       ;;
     --volumes-from=?*)
-      _volumes-from=${1#*=};;
+      _volumes-from=${1#*=}
+      shift
+      continue;;
     --volumes-from=)
         missing_arg_error "volumes-from";;
 
