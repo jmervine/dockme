@@ -37,7 +37,7 @@ function options_printer {
   parg "d" "destination"   "remote host source directory"
   parg "i" "image"         "image"
   parg "H" "hostname"
-  parg "p" "port"
+  parg "p" "publish"
   parg "w" "workdir"
   parg "w" "workdir"
   parg "n" "name"
@@ -134,8 +134,8 @@ function save_config {
   [[ -z "${_workdir}" ]] \
     || echo "_workdir=${_workdir}" >> .dockmerc
 
-  [[ -z "${_port}" ]] \
-    || echo "_port=${_port}" >> .dockmerc
+  [[ -z "${_publish}" ]] \
+    || echo "_publish=${_publish}" >> .dockmerc
 
   [[ -z "${_hostname}" ]] \
     || echo "_hostname=${_hostname}" >> .dockmerc
@@ -159,7 +159,7 @@ function save_config {
     || echo "_volumes_from=\"${_volumes_from}\"" >> .dockmerc
 
   [[ -z "${_command}" ]] \
-    || echo "_command=\"${_command}\"" >> .dockmerc
+    || echo "_command=${_command}" >> .dockmerc
 
   echo "+ configuration saved to .dockmerc"
   cat .dockmerc
@@ -256,20 +256,20 @@ while [ "$#" -gt 0 ]; do
     --hostname=)
         missing_arg_error "hostname";;
 
-    # port
-    -p|--port)
+    # publish
+    -p|--publish)
       if [ "$#" -gt 1 ]; then
-        _port=$2
+        _publish=$2
         shift 2
         continue
       else
-        missing_arg_error "port"
+        missing_arg_error "publish"
       fi
       ;;
-    --port=?*)
-      _port=${1#*=};;
-    --port=)
-        missing_arg_error "port";;
+    --publish=?*)
+      _publish=${1#*=};;
+    --publish=)
+        missing_arg_error "publish";;
 
     # workdir
     -w|--workdir)
@@ -433,6 +433,12 @@ fi
 
 [[ -z "${_memory}" ]] \
   || docker="${docker} --memory=${_memory}"
+
+[[ -z "${_hostname}" ]] \
+  || docker="${docker} --hostname=${_hostname}"
+
+[[ -z "${_publish}" ]] \
+  || docker="${docker} --publish=${_publish}"
 
 [[ -z "${_destination}" ]] \
   && docker="${docker} --volume=${_source}"

@@ -41,7 +41,7 @@ environments.
   -d, --destination    remote host source directory
   -i, --image          image
   -H, --hostname       see 'docker run --help' for details
-  -p, --port           see 'docker run --help' for details
+  -p, --publish        see 'docker run --help' for details
   -w, --workdir        see 'docker run --help' for details
   -w, --workdir        see 'docker run --help' for details
   -n, --name           see 'docker run --help' for details
@@ -127,7 +127,7 @@ _source=/Users/jmervine/Development/railsdev
 _destination=/src
 _image=jmervine/railsdev:latest
 _rm=true
-_port=3000:3000
+_publish=3000:3000
 _hostname=railsdev
 _name=railsdev
 _volumes="/Users/jmervine/.ssh:/root/.ssh"
