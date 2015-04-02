@@ -20,7 +20,7 @@ dockme --help
 ## Usage
 
 ```text
-Usage: dockme [options|template] [-- command]
+Usage: dockme [template] [options] [-- command]
 
 Simple wraper for quickly spooling up docker comtainers a development
 environments.
@@ -32,6 +32,9 @@ environments.
   - rails   rails:latest
   - python  python:2
   - golang  golang:latest
+
+  Template configurations must be defined as the first argument and are applied
+  and then overwritten by any passed arguments.
 
   Options:
   -s, --source         local host source directory
@@ -46,16 +49,46 @@ environments.
   -r, --rm             see 'docker run --help' for details
       --cpuset         see 'docker run --help' for details
       --memory         see 'docker run --help' for details
-  -v  --volumes        see 'docker run --help' for details
+  -v, --volumes        see 'docker run --help' for details
       --volumes-from   see 'docker run --help' for details
   -D, --dryrun         only print what would be executed
+      --save           save configuration to local .dockmerc file
 
   Defaults:
-  - source       current working directory
+  - source       '/Users/jmervine/Development/dockme'
   - destination  '/src'
   - image        'jmervine/vimrc'
-  - workdir      '/src'
   - rm           'true'
+  - workdir      destination directory
+
+External Configuration
+
+dockme can be configured via an external file. It will look for a file named
+.dockmerc in your home directory and the current working directory, unless one
+is passed via the configuration argument. *All arguments passed will supersede
+arguments configured by dockmerc files.*
+
+  Configuration Precedence
+
+  > ARGUMENTS
+  --> .dockmerc
+  ----> ~/.dockmerc
+
+  Configuration Sample:
+
+  # file: .dockmerc
+  _source=/path/to/source
+  _destination=/path/to/dest
+  _image=username/image:tag
+  _rm=true
+  _workdir=/path/to/workdir
+  _name=container_name
+  _net=host
+  _cpuset=2
+  _memory=1g
+  _volumes=/some/vol:/some/path
+  _volumes_from=volume_container
+  _command=echo a command
 
 ```
 

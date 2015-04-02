@@ -7,6 +7,16 @@ _destination="/src"
 _image="jmervine/vimrc"
 _rm="true"
 
+# load configurations
+#########################
+test -e $HOME/.dockmerc \
+  && source $HOME/.dockmerc
+
+test -e $(pwd)/.dockmerc \
+  && source $(pwd)/.dockmerc
+
+# helper methods
+#########################
 function parg {
   local sopt="$1"
   local lopt="$2"
@@ -38,10 +48,11 @@ function options_printer {
   parg "v" "volumes"
   parg ""  "volumes-from"
   parg "D" "dryrun"        "only print what would be executed"
+  parg ""  "save"          "save configuration to local .dockmerc file"
 }
 
 function show_help {
-  echo "Usage: $0 [options] [-- command]
+  echo "Usage: $0 [template] [options] [-- command]
 
 Simple wraper for quickly spooling up docker comtainers a development
 environments.
@@ -54,6 +65,9 @@ environments.
   - python  python:2
   - golang  golang:latest
 
+  Template configurations must be defined as the first argument and are applied
+  and then overwritten by any passed arguments.
+
   Options:
 $(options_printer)
 
@@ -63,7 +77,36 @@ $(options_printer)
   - image        '${_image}'
   - rm           '${_rm}'
   - workdir      destination directory
-"
+
+External Configuration
+
+dockme can be configured via an external file. It will look for a file named
+.dockmerc in your home directory and the current working directory, unless one
+is passed via the configuration argument. *All arguments passed will supersede
+arguments configured by dockmerc files.*
+
+  Configuration Precedence
+
+  > ARGUMENTS
+  --> .dockmerc
+  ----> ~/.dockmerc
+
+  Configuration Sample:
+
+  # file: .dockmerc
+  _source=/path/to/source
+  _destination=/path/to/dest
+  _image=username/image:tag
+  _rm=true
+  _workdir=/path/to/workdir
+  _name=container_name
+  _net=host
+  _cpuset=2
+  _memory=1g
+  _volumes=/some/vol:/some/path
+  _volumes_from=volume_container
+  _command="echo 'a command'"
+" | less
 }
 
 function messing_arg_error {
@@ -123,23 +166,26 @@ function save_config {
 }
 
 # handle templates
-if [ "$#" -eq 1 ]; then
-  _found='true'
-  case "$@" in
+if [ "$#" -gt 0 ]; then
+  case "$1" in
     vim|vimrc)
-      _image="jmervine/vimrc:latest";;
+      _image="jmervine/vimrc:latest"
+      shift;;
     ruby|rb)
-      _image="ruby:latest";;
+      _image="ruby:latest"
+      shift;;
     rails)
-      _image="rails:latest";;
+      _image="rails:latest"
+      shift;;
     python|py)
-      _image="python:2";;
+      _image="python:2"
+      shift;;
     node|nodejs)
-      _image="node:latest";;
+      _image="node:latest"
+      shift;;
     go|golang)
-      _image="golang:latest";;
-    *)
-      unset _found;;
+      _image="golang:latest"
+      shift;;
   esac
 fi
 
@@ -274,7 +320,83 @@ while [ "$#" -gt 0 ]; do
     -r|--rm)
         _rm='true'
         shift
-        break;;
+        continue;;
+
+    # dryrun
+    -D|--dryrun)
+        _dryrun='true'
+        shift
+        continue;;
+
+    # save
+    --save)
+        _save='true'
+        shift
+        continue;;
+
+    # cpuset
+    --cpuset)
+      if [ "$#" -gt 1 ]; then
+        _cpuset=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "cpuset"
+      fi
+      ;;
+    --cpuset=?*)
+      _cpuset=${1#*=};;
+    --cpuset=)
+        missing_arg_error "cpuset";;
+
+    # memory
+    --memory)
+      if [ "$#" -gt 1 ]; then
+        _memory=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "memory"
+      fi
+      ;;
+    --memory=?*)
+      _memory=${1#*=};;
+    --memory=)
+        missing_arg_error "memory";;
+
+    # volumes
+    -v|--volumes)
+      if [ "$#" -gt 1 ]; then
+        _volumes=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "volumes"
+      fi
+      ;;
+    --volumes=?*)
+      _volumes=${1#*=};;
+    --volumes=)
+        missing_arg_error "volumes";;
+
+    # volumes_from
+    --volumes-from)
+      if [ "$#" -gt 1 ]; then
+        _volumes-from=$2
+        shift 2
+        continue
+      else
+        missing_arg_error "volumes-from"
+      fi
+      ;;
+    --volumes-from=?*)
+      _volumes-from=${1#*=};;
+    --volumes-from=)
+        missing_arg_error "volumes-from";;
+
+    --)
+      shift
+      break;;
 
     -?*)
       printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
@@ -336,6 +458,9 @@ docker="${docker} ${_image}"
 
 [[ -z "${_command}" ]] \
   || docker="${docker} ${_command}"
+
+[[ -z "${_save}" ]] \
+  || save_config
 
 echo "+ $docker"
 
