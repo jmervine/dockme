@@ -159,7 +159,7 @@ function save_config {
     || echo "_volumes_from=\"${_volumes_from}\"" >> .dockmerc
 
   [[ -z "${_command}" ]] \
-    || echo "_command=${_command}" >> .dockmerc
+    || echo "_command=\"${_command}\"" >> .dockmerc
 
   echo "+ configuration saved to .dockmerc"
   cat .dockmerc
