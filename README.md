@@ -96,10 +96,12 @@ arguments configured by dockmerc files.*
 
 ```text
 # defaults
+##
 $ dockme
 docker run -it --rm --workdir=/src --volume=/path/to/project:/src jmervine/vimrc
 
 # custom examples
+##
 $ pwd
 /Users/jmervine/Development/dockme
 $ dockme -i ruby:latest -- irb
@@ -111,7 +113,26 @@ irb(main):002:0> RUBY_VERSION
 irb(main):003:0>
 
 # template example
+##
 $ cd /path/to/project
 $ dockme ruby
 docker run -it --rm --workdir=/src --volume=/path/to/project:/src ruby:latest
+
+# save example
+##
+$ dockme -v "$HOME/.ssh:/root/.ssh" -H railsdev -n railsdev -p 3000:3000 -i jmervine/railsdev:latest --save -D
++ configuration saved to .dockmerc
+# file: .dockmerc
+_source=/Users/jmervine/Development/railsdev
+_destination=/src
+_image=jmervine/railsdev:latest
+_rm=true
+_port=3000:3000
+_hostname=railsdev
+_name=railsdev
+_volumes="/Users/jmervine/.ssh:/root/.ssh"
++ docker run -it --workdir=/src --rm --name=railsdev --volume=/Users/jmervine/Development/railsdev:/src  --volume=/Users/jmervine/.ssh:/root/.ssh jmervine/railsdev:latest
+
+$ dockme
++ docker run -it --workdir=/src --rm --name=railsdev --volume=/Users/jmervine/Development/railsdev:/src  --volume=/Users/jmervine/.ssh:/root/.ssh jmervine/railsdev:latest
 ```
