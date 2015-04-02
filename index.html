@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Dockme by jmervine</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Dockme</h1>
+        <p>Simple docker wrapper for quickly spooling up containerized development environments.</p>
+
+        <p class="view"><a href="https://github.com/jmervine/dockme">View the Project on GitHub <small>jmervine/dockme</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/jmervine/dockme/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/jmervine/dockme/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/jmervine/dockme">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Install</h2>
+
+<blockquote>
+<p>Install Docker, of course</p>
+
+<ul>
+<li><a href="https://docs.docker.com/installation/">https://docs.docker.com/installation/</a></li>
+</ul>
+</blockquote>
+
+<pre lang="text"><code>mkdir -p ~/.bin
+curl -sSL https://raw.githubusercontent.com/jmervine/dockme/master/dockme &gt; ~/.bin/dockme
+chmod +x ~/.bin/dockme
+echo "export PATH=~/.bin:$PATH" &gt;&gt; ~/.bashrc
+source ~/.bashrc
+
+dockme --help
+</code></pre>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<pre lang="text"><code>Usage: dockme [options|template] [-- command]
+
+Simple wraper for quickly spooling up docker comtainers a development
+environments.
+
+  Templates:
+  - vim     jmervine/vimrc:latest
+  - node    node:latest
+  - ruby    ruby:latest
+  - rails   rails:latest
+  - python  python:2
+  - golang  golang:latest
+
+  Options:
+  -s, --source         local host source directory
+  -d, --destination    remote host source directory
+  -i, --image          image
+  -w, --workdir        see 'docker run --help' for details
+  -n, --name           see 'docker run --help' for details
+  -N, --net            see 'docker run --help' for details
+  -r, --rm             see 'docker run --help' for details
+      --cpuset         see 'docker run --help' for details
+      --memory         see 'docker run --help' for details
+  -v  --volumes        see 'docker run --help' for details
+      --volumes-from   see 'docker run --help' for details
+  -D, --dryrun         only print what would be executed
+
+  Defaults:
+  - source       current working directory
+  - destination  '/src'
+  - image        'jmervine/vimrc'
+  - workdir      '/src'
+  - rm           'true'
+
+</code></pre>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<pre lang="text"><code># defaults
+$ dockme
+docker run -it --rm --workdir=/src --volume=/path/to/project:/src jmervine/vimrc
+
+# custom examples
+$ pwd
+/Users/jmervine/Development/dockme
+$ dockme -i ruby:latest -- irb
++ docker run -it --workdir=/src --rm --volume=/Users/jmervine/Development/dockme:/src ruby:latest irb
+irb(main):001:0&gt; `pwd`.strip
+=&gt; "/src"
+irb(main):002:0&gt; RUBY_VERSION
+=&gt; "2.2.1"
+irb(main):003:0&gt;
+
+# template example
+$ cd /path/to/project
+$ dockme ruby
+docker run -it --rm --workdir=/src --volume=/path/to/project:/src ruby:latest
+</code></pre>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/jmervine">jmervine</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
