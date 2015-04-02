@@ -116,41 +116,41 @@ function messing_arg_error {
 function save_config {
   echo "# file: .dockmerc" > .dockmerc
 
-  [[ ! -z "${_source}" ]] \
-    && echo "_source=${_source}" >> .dockmerc
+  [[ -z "${_source}" ]] \
+    || echo "_source=${_source}" >> .dockmerc
 
-  [[ ! -z "${_destination}" ]] \
-    && echo "_destination=${_destination}" >> .dockmerc
+  [[ -z "${_destination}" ]] \
+    || echo "_destination=${_destination}" >> .dockmerc
 
-  [[ ! -z "${_image}" ]] \
-    && echo "_image=${_image}" >> .dockmerc
+  [[ -z "${_image}" ]] \
+    || echo "_image=${_image}" >> .dockmerc
 
-  [[ ! -z "${_rm}" ]] \
-    && echo "_rm=${_rm}" >> .dockmerc
+  [[ -z "${_rm}" ]] \
+    || echo "_rm=${_rm}" >> .dockmerc
 
-  [[ ! -z "${_workdir}" ]] \
-    && echo "_workdir=${_workdir}" >> .dockmerc
+  [[ -z "${_workdir}" ]] \
+    || echo "_workdir=${_workdir}" >> .dockmerc
 
-  [[ ! -z "${_name}" ]] \
-    && echo "_name=${_name}" >> .dockmerc
+  [[ -z "${_name}" ]] \
+    || echo "_name=${_name}" >> .dockmerc
 
-  [[ ! -z "${_net}" ]] \
-    && echo "_net=${_net}" >> .dockmerc
+  [[ -z "${_net}" ]] \
+    || echo "_net=${_net}" >> .dockmerc
 
-  [[ ! -z "${_cpuset}" ]] \
-    && echo "_cpuset=${_cpuset}" >> .dockmerc
+  [[ -z "${_cpuset}" ]] \
+    || echo "_cpuset=${_cpuset}" >> .dockmerc
 
-  [[ ! -z "${_memory}" ]] \
-    && echo "_memory=${_memory}" >> .dockmerc
+  [[ -z "${_memory}" ]] \
+    || echo "_memory=${_memory}" >> .dockmerc
 
-  [[ ! -z "${_volumes}" ]] \
-    && echo "_volumes=\"${_volumes}\"" >> .dockmerc
+  [[ -z "${_volumes}" ]] \
+    || echo "_volumes=\"${_volumes}\"" >> .dockmerc
 
-  [[ ! -z "${_volumes_from}" ]] \
-    && echo "_volumes_from=\"${_volumes_from}\"" >> .dockmerc
+  [[ -z "${_volumes_from}" ]] \
+    || echo "_volumes_from=\"${_volumes_from}\"" >> .dockmerc
 
-  [[ ! -z "${_command}" ]] \
-    && echo "_command=${_command}" >> .dockmerc
+  [[ -z "${_command}" ]] \
+    || echo "_command=${_command}" >> .dockmerc
 
   echo "+ configuration saved to .dockmerc"
   cat .dockmerc
