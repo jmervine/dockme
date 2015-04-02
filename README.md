@@ -37,6 +37,9 @@ environments.
   -s, --source         local host source directory
   -d, --destination    remote host source directory
   -i, --image          image
+  -H, --hostname       see 'docker run --help' for details
+  -p, --port           see 'docker run --help' for details
+  -w, --workdir        see 'docker run --help' for details
   -w, --workdir        see 'docker run --help' for details
   -n, --name           see 'docker run --help' for details
   -N, --net            see 'docker run --help' for details
