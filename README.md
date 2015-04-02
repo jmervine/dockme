@@ -47,6 +47,7 @@ environments.
   -n, --name           see 'docker run --help' for details
   -N, --net            see 'docker run --help' for details
   -r, --rm             see 'docker run --help' for details
+      --no-rm          do not remove container when finished
       --cpuset         see 'docker run --help' for details
       --memory         see 'docker run --help' for details
   -v, --volumes        see 'docker run --help' for details
