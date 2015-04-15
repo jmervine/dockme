@@ -3,17 +3,22 @@ package main
 // this a first pass, expect refactors
 
 import (
+	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
+	"log"
 	"os"
 	"os/exec"
+
+	//"path/filepath"
 	"strings"
 )
 
 const DOCKER = "docker"
 const ACTION = "run"
+const DEFAULT_TEMPLATE = "default"
 
-type dockme struct {
+type Dockme struct {
 	hostname    string
 	domainname  string
 	user        string
@@ -27,7 +32,6 @@ type dockme struct {
 	cmd         string // straying from type
 	source      string // custom arg
 	destination string // custom arg
-	template    string // custom arg
 
 	memory     int
 	memorySwap int
@@ -39,13 +43,13 @@ type dockme struct {
 	dryrun      bool // custom arg
 	save        bool // custom arg
 
+	expose      []string
 	env         []string
-	expose      []string // straying from type
 	volume      []string // straying from type
 	volumesFrom []string // straying from type
 }
 
-func (dm *dockme) args() []string {
+func (dm *Dockme) args() []string {
 	args := []string{ACTION}
 
 	// TODO: find a more meta way?
@@ -83,8 +87,7 @@ func (dm *dockme) args() []string {
 	}
 
 	if (dm.source == "" || dm.destination == "") && (dm.source != "" || dm.destination != "") {
-		fmt.Errorf("Can't specify source or destination, both or neither")
-		os.Exit(1)
+		log.Fatal(errors.New("Can't specify source or destination, both or neither"))
 	}
 
 	if dm.source != "" && dm.destination != "" {
@@ -116,21 +119,21 @@ func (dm *dockme) args() []string {
 		args = append(args, "--interactive")
 	}
 
-	if len(dm.env) > 0 {
-		for _, e := range dm.env {
-			args = append(args, fmt.Sprintf("--env=%s", e))
-		}
-	}
-
 	if len(dm.expose) > 0 {
 		for _, e := range dm.expose {
 			args = append(args, fmt.Sprintf("--expose=%s", e))
 		}
 	}
 
+	if len(dm.env) > 0 {
+		for _, e := range dm.env {
+			args = append(args, fmt.Sprintf("--env=%s", e))
+		}
+	}
+
 	if len(dm.volume) > 0 {
-		for _, v := range dm.volume {
-			args = append(args, fmt.Sprintf("--volume=%s", v))
+		for _, e := range dm.volume {
+			args = append(args, fmt.Sprintf("--volume=%s", e))
 		}
 	}
 
@@ -141,16 +144,20 @@ func (dm *dockme) args() []string {
 	}
 
 	if dm.image == "" {
-		fmt.Errorf("Image is required")
-		os.Exit(1)
+		log.Fatal(errors.New("Image is required"))
 	}
 	args = append(args, dm.image)
+
+	if dm.cmd == "" {
+		dm.cmd = "bash"
+	}
+
 	args = append(args, dm.cmd)
 
 	return args
 }
 
-func (dm *dockme) exec() {
+func (dm *Dockme) exec() {
 	args := dm.args()
 
 	fmt.Printf("+ %s %s\n", DOCKER, strings.Join(args, " "))
@@ -166,7 +173,7 @@ func (dm *dockme) exec() {
 	cmd.Run()
 }
 
-func (dm *dockme) applyDefaults() {
+func (dm *Dockme) applyDefaults() {
 	// source is local dir if not
 	if dm.source == "" {
 		cwd, err := os.Getwd()
@@ -195,8 +202,8 @@ func (dm *dockme) applyDefaults() {
 	}
 }
 
-var templates = map[string]*dockme{
-	"default": &dockme{
+var templates = map[string]*Dockme{
+	"default": &Dockme{
 		image:       "jmervine/zshrc:latest",
 		name:        "dockme",
 		interactive: true,
@@ -204,23 +211,31 @@ var templates = map[string]*dockme{
 		rm:          true,
 		cmd:         "bash",
 	},
-	"ruby": &dockme{
-		image:       "ruby:latest",
+	"ruby": &Dockme{
+		image:       "jmervine/herokudev-ruby:latest",
 		name:        "rubydev",
 		interactive: true,
 		tty:         true,
 		rm:          true,
 		cmd:         "bash",
 	},
-	"node": &dockme{
-		image:       "node:latest",
+	"rails": &Dockme{
+		image:       "jmervine/herokudev-rails:latest",
+		name:        "railsdev",
+		interactive: true,
+		tty:         true,
+		rm:          true,
+		cmd:         "bash",
+	},
+	"node": &Dockme{
+		image:       "jmervine/herokudev-node:latest",
 		name:        "nodedev",
 		interactive: true,
 		tty:         true,
 		rm:          true,
 		cmd:         "bash",
 	},
-	"nodebox": &dockme{
+	"nodebox": &Dockme{
 		image:       "jmervine/nodebox:latest",
 		name:        "nodeboxdev",
 		interactive: true,
@@ -231,10 +246,8 @@ var templates = map[string]*dockme{
 }
 
 func main() {
-	template := "default"
-
 	app := cli.NewApp()
-	app.Name = "dockme"
+	app.Name = "Dockme"
 	app.Version = "0.2.0"
 	app.Author = "Joshua Mervine"
 	app.Email = "joshua@mervine.net"
@@ -244,7 +257,7 @@ func main() {
     {{.Name}} - {{.Usage}}
 
 USAGE:
-    {{.Name}} [template] [arguments...] [command]
+    {{.Name}} [arguments...] [command]
 
 VERSION:
     {{.Version}}
@@ -252,20 +265,28 @@ VERSION:
 AUTHOR:
     {{.Author}}
 
-TEMPLATES:
-    {{range .Commands}}{{ .Name }}{{ "\t" }}{{.Usage}}
-    {{end}}{{if .Flags}}
-
 OPTIONS:
     Only custom options or options whose usage strays from dockers
     usage have help messages. All other options map directly to docker
     run options, see Docker help and documentation for details.
 
     {{range .Flags}}{{.}}
-    {{end}}{{end}}
+    {{end}}
+TEMPLATES:
+    nodebox     nodebox template w/ 'jmervine/nodebox:latest'
+    default     default template w/ 'jmervine/zshrc:latest'
+    ruby        ruby template w/ 'jmervine/herokudev-ruby:latest'
+    rails       rails template w/ 'jmervine/herokudev-rails:latest'
+    node        node template w/ 'jmervine/herokudev-node:latest'
+    help        Shows a list of commands or help for one command
+
 `
 
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "template, T",
+			Usage: "set docker image template, see TEMPLATES below",
+		},
 		cli.StringFlag{
 			Name:  "image, I",
 			Usage: "set docker image",
@@ -281,6 +302,10 @@ OPTIONS:
 		cli.StringFlag{
 			Name:  "publish, p",
 			Usage: "list of ports to publish",
+		},
+		cli.StringFlag{
+			Name:  "workdir, w",
+			Usage: "set container workdir",
 		},
 		cli.BoolFlag{
 			Name:  "dryrun",
@@ -353,111 +378,110 @@ OPTIONS:
 		},
 	}
 
-	app.Commands = []cli.Command{}
-	for k, t := range templates {
-		app.Commands = append(app.Commands, cli.Command{
-			Name:  k,
-			Usage: fmt.Sprintf("%s template w/ '%s'", k, t.image),
-			Action: func(c *cli.Context) {
-				template = c.Args().First()
-			},
-		})
-	}
-
-	split := func(s string) []string {
-		sp := strings.Split(s, ",")
-		if len(sp) == 1 {
-			sp = strings.Split(s, " ")
-		}
-
-		for n, i := range sp {
-			sp[n] = strings.TrimSpace(i)
-		}
-
-		return sp
-	}
-
 	app.Action = func(c *cli.Context) {
-		dm := templates[template]
+		var template = DEFAULT_TEMPLATE
+		if c.String("template") != "" {
+			template = c.String("template")
+		}
+
+		dockme := templates[template]
+
 		if c.String("image") != "" {
-			dm.image = c.String("image")
+			dockme.image = c.String("image")
 		}
 		if c.String("source") != "" {
-			dm.source = c.String("source")
+			dockme.source = c.String("source")
 		}
 		if c.String("destination") != "" {
-			dm.destination = c.String("destination")
+			dockme.destination = c.String("destination")
 		}
 		if c.String("publish") != "" {
-			dm.publish = c.String("publish")
+			dockme.publish = c.String("publish")
+		}
+		if c.String("workdir") != "" {
+			dockme.workdir = c.String("workdir")
 		}
 		if c.String("name") != "" {
-			dm.name = c.String("name")
+			dockme.name = c.String("name")
 		}
 		if c.String("entrypoint") != "" {
-			dm.entrypoint = c.String("entrypoint")
+			dockme.entrypoint = c.String("entrypoint")
 		}
 		if c.String("user") != "" {
-			dm.user = c.String("user")
+			dockme.user = c.String("user")
 		}
 		if c.String("hostname") != "" {
-			dm.hostname = c.String("hostname")
+			dockme.hostname = c.String("hostname")
 		}
 		if c.String("domainname") != "" {
-			dm.domainname = c.String("domainname")
+			dockme.domainname = c.String("domainname")
 		}
 		if c.String("mac-address") != "" {
-			dm.macAddress = c.String("mac-address")
+			dockme.macAddress = c.String("mac-address")
 		}
 		if c.String("cpuset") != "" {
-			dm.cpuset = c.String("cpuset")
+			dockme.cpuset = c.String("cpuset")
 		}
 		if c.Int("memory") > 0 {
-			dm.memory = c.Int("memory")
+			dockme.memory = c.Int("memory")
 		}
 		if c.Int("memory-swap") > 0 {
-			dm.memorySwap = c.Int("memory-swap")
+			dockme.memorySwap = c.Int("memory-swap")
 		}
 		if c.Bool("rm") {
-			dm.rm = c.Bool("rm")
+			dockme.rm = c.Bool("rm")
 		}
 		if c.Bool("no-rm") {
-			dm.rm = false
+			dockme.rm = false
 		}
 		if c.Bool("interactive") {
-			dm.interactive = c.Bool("interactive")
+			dockme.interactive = c.Bool("interactive")
 		}
 		if c.Bool("no-interactive") {
-			dm.interactive = false
+			dockme.interactive = false
 		}
 		if c.Bool("tty") {
-			dm.tty = c.Bool("tty")
+			dockme.tty = c.Bool("tty")
 		}
 		if c.Bool("no-tty") {
-			dm.tty = false
+			dockme.tty = false
 		}
 		if c.Bool("dryrun") {
-			dm.dryrun = c.Bool("dryrun")
+			dockme.dryrun = c.Bool("dryrun")
 		}
 		if c.Bool("save") {
-			dm.save = c.Bool("save")
+			dockme.save = c.Bool("save")
 		}
 		if c.String("expose") != "" {
-			dm.expose = split(c.String("expose"))
+			dockme.expose = split(c.String("expose"))
 		}
 		if c.String("env") != "" {
-			dm.env = split(c.String("env"))
+			dockme.env = split(c.String("env"))
 		}
 		if c.String("volume") != "" {
-			dm.volume = split(c.String("volume"))
+			dockme.volume = split(c.String("volume"))
 		}
 		if c.String("volumes-from") != "" {
-			dm.volumesFrom = split(c.String("volumes-from"))
+			dockme.volumesFrom = split(c.String("volumes-from"))
 		}
 
-		dm.applyDefaults()
-		dm.exec()
+		dockme.cmd = strings.Join(c.Args(), " ")
+
+		dockme.applyDefaults()
+		dockme.exec()
+	}
+	app.Run(os.Args)
+}
+
+func split(s string) []string {
+	sp := strings.Split(s, ",")
+	if len(sp) == 1 {
+		sp = strings.Split(s, " ")
 	}
 
-	app.Run(os.Args)
+	for n, i := range sp {
+		sp[n] = strings.TrimSpace(i)
+	}
+
+	return sp
 }
