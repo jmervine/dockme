@@ -6,47 +6,53 @@ import (
 	"errors"
 	"fmt"
 	"github.com/codegangsta/cli"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 
 	//"path/filepath"
+	"gopkg.in/yaml.v2"
+
 	"strings"
 )
 
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
+const DEFAULT_CONFIG = "Dockme.yml"
 
 type Dockme struct {
-	hostname    string
-	domainname  string
-	user        string
-	cpuset      string
-	image       string
-	workdir     string
-	macAddress  string
-	name        string
-	publish     string
-	entrypoint  string // straying from type
-	cmd         string // straying from type
-	source      string // custom arg
-	destination string // custom arg
+	Hostname    string `yaml:"hostname,omitempty"`
+	Domainname  string `yaml:"domainname,omitempty"`
+	User        string `yaml:"user,omitempty"`
+	Cpuset      string `yaml:"cpuset,omitempty"`
+	Image       string `yaml:"image,omitempty"`
+	Workdir     string `yaml:"workdir,omitempty"`
+	MacAddress  string `yaml:"mac_address,omitempty"`
+	Name        string `yaml:"name,omitempty"`
+	Entrypoint  string `yaml:"entrypoint,omitempty"`
+	Cmd         string `yaml:"command,omitempty"`
+	Source      string `yaml:"source,omitempty"`
+	srcFromCwd  bool   // don't save source
+	Destination string `yaml:"destination,omitempty"`
+	config      string
 
-	memory     int
-	memorySwap int
-	cpuShares  int
+	Memory     int `yaml:"memory,omitempty"`
+	MemorySwap int `yaml:"memory_swap,omitempty"`
+	CpuShares  int `yaml:"cpu_shares,omitempty"`
 
-	rm          bool
-	interactive bool
-	tty         bool
-	dryrun      bool // custom arg
-	save        bool // custom arg
+	Rm          bool `yaml:"rm,omitempty"`
+	Interactive bool `yaml:"interactive,omitempty"`
+	Tty         bool `yaml:"tty,omitempty"`
+	dryrun      bool
+	save        bool
 
-	expose      []string
-	env         []string
-	volume      []string // straying from type
-	volumesFrom []string // straying from type
+	Expose      []string `yaml:"expose,omitempty,flow"`
+	Env         []string `yaml:"env,omitempty,flow"`
+	Volume      []string `yaml:"volume,omitempty,flow"`
+	VolumesFrom []string `yaml:"volumes_from,omitempty,flow"`
+	Publish     []string `yaml:"publish,omitempty,flow"`
 }
 
 func (dm *Dockme) args() []string {
@@ -54,105 +60,111 @@ func (dm *Dockme) args() []string {
 
 	// TODO: find a more meta way?
 
-	if dm.name != "" {
-		args = append(args, fmt.Sprintf("--name=%s", dm.name))
+	if dm.Name != "" {
+		args = append(args, fmt.Sprintf("--name=%s", dm.Name))
 	}
 
-	if dm.hostname != "" {
-		args = append(args, fmt.Sprintf("--hostname=%s", dm.hostname))
+	if dm.Hostname != "" {
+		args = append(args, fmt.Sprintf("--hostname=%s", dm.Hostname))
 	}
 
-	if dm.domainname != "" {
-		args = append(args, fmt.Sprintf("--domainname=%s", dm.domainname))
+	if dm.Domainname != "" {
+		args = append(args, fmt.Sprintf("--domainname=%s", dm.Domainname))
 	}
 
-	if dm.user != "" {
-		args = append(args, fmt.Sprintf("--user=%s", dm.user))
+	if dm.User != "" {
+		args = append(args, fmt.Sprintf("--user=%s", dm.User))
 	}
 
-	if dm.cpuset != "" {
-		args = append(args, fmt.Sprintf("--cpuset=%s", dm.cpuset))
+	if dm.Cpuset != "" {
+		args = append(args, fmt.Sprintf("--cpuset=%s", dm.Cpuset))
 	}
 
-	if dm.workdir != "" {
-		args = append(args, fmt.Sprintf("--workdir=%s", dm.workdir))
+	if dm.Workdir != "" {
+		args = append(args, fmt.Sprintf("--workdir=%s", dm.Workdir))
 	}
 
-	if dm.macAddress != "" {
-		args = append(args, fmt.Sprintf("--mac-address=%s", dm.macAddress))
+	if dm.MacAddress != "" {
+		args = append(args, fmt.Sprintf("--mac-address=%s", dm.MacAddress))
 	}
 
-	if dm.entrypoint != "" {
-		args = append(args, fmt.Sprintf("--mac-address=%s", dm.entrypoint))
+	if dm.Entrypoint != "" {
+		args = append(args, fmt.Sprintf("--mac-address=%s", dm.Entrypoint))
 	}
 
-	if (dm.source == "" || dm.destination == "") && (dm.source != "" || dm.destination != "") {
+	if (dm.Source == "" || dm.Destination == "") && (dm.Source != "" || dm.Destination != "") {
 		log.Fatal(errors.New("Can't specify source or destination, both or neither"))
 	}
 
-	if dm.source != "" && dm.destination != "" {
-		dm.volume = append(dm.volume,
-			fmt.Sprintf("%s:%s", dm.source, dm.destination))
+	if dm.Source != "" && dm.Destination != "" {
+		dm.Volume = append(dm.Volume,
+			fmt.Sprintf("%s:%s", dm.Source, dm.Destination))
 	}
 
-	if dm.memory > 0 {
-		args = append(args, fmt.Sprintf("--memory=%d", dm.memory))
+	if dm.Memory > 0 {
+		args = append(args, fmt.Sprintf("--memory=%d", dm.Memory))
 	}
 
-	if dm.memorySwap > 0 {
-		args = append(args, fmt.Sprintf("--memory-swap=%d", dm.memorySwap))
+	if dm.MemorySwap > 0 {
+		args = append(args, fmt.Sprintf("--memory-swap=%d", dm.MemorySwap))
 	}
 
-	if dm.cpuShares > 0 {
-		args = append(args, fmt.Sprintf("--cpu-shares=%d", dm.cpuShares))
+	if dm.CpuShares > 0 {
+		args = append(args, fmt.Sprintf("--cpu-shares=%d", dm.CpuShares))
 	}
 
-	if dm.rm {
+	if dm.Rm {
 		args = append(args, "--rm")
 	}
 
-	if dm.tty {
+	if dm.Tty {
 		args = append(args, "--tty")
 	}
 
-	if dm.interactive {
+	if dm.Interactive {
 		args = append(args, "--interactive")
 	}
 
-	if len(dm.expose) > 0 {
-		for _, e := range dm.expose {
+	if len(dm.Expose) > 0 {
+		for _, e := range dm.Expose {
 			args = append(args, fmt.Sprintf("--expose=%s", e))
 		}
 	}
 
-	if len(dm.env) > 0 {
-		for _, e := range dm.env {
+	if len(dm.Env) > 0 {
+		for _, e := range dm.Env {
 			args = append(args, fmt.Sprintf("--env=%s", e))
 		}
 	}
 
-	if len(dm.volume) > 0 {
-		for _, e := range dm.volume {
+	if len(dm.Volume) > 0 {
+		for _, e := range dm.Volume {
 			args = append(args, fmt.Sprintf("--volume=%s", e))
 		}
 	}
 
-	if len(dm.volumesFrom) > 0 {
-		for _, e := range dm.volumesFrom {
+	if len(dm.VolumesFrom) > 0 {
+		for _, e := range dm.VolumesFrom {
 			args = append(args, fmt.Sprintf("--volumes-from=%s", e))
 		}
 	}
 
-	if dm.image == "" {
+	if len(dm.Publish) > 0 {
+		for _, e := range dm.Publish {
+			args = append(args, fmt.Sprintf("--publish=%s", e))
+		}
+	}
+
+	if dm.Image == "" {
 		log.Fatal(errors.New("Image is required"))
 	}
-	args = append(args, dm.image)
+	args = append(args, dm.Image)
 
-	if dm.cmd == "" {
-		dm.cmd = "bash"
+	if dm.Cmd == "" {
+		dm.Cmd = "bash"
 	}
 
-	args = append(args, dm.cmd)
+	args = append(args, dm.Cmd)
 
 	return args
 }
@@ -175,73 +187,85 @@ func (dm *Dockme) exec() {
 
 func (dm *Dockme) applyDefaults() {
 	// source is local dir if not
-	if dm.source == "" {
+	if dm.Source == "" {
+		dm.srcFromCwd = true
 		cwd, err := os.Getwd()
 		if err != nil {
 			fmt.Errorf("%s", err)
 			os.Exit(1)
 		}
-		dm.source = cwd
-	}
-
-	// desination is /src if not set
-	if dm.destination == "" {
-		dm.destination = "/src"
+		dm.Source = cwd
 	}
 
 	// hostname is image basename
-	if dm.hostname == "" {
-		imageSansTag := strings.Split(dm.image, ":")[0]
+	if dm.Hostname == "" {
+		imageSansTag := strings.Split(dm.Image, ":")[0]
 		imageSplit := strings.Split(imageSansTag, "/")
-		dm.hostname = imageSplit[len(imageSplit)-1]
+		dm.Hostname = imageSplit[len(imageSplit)-1]
+	}
+}
+
+func (dm *Dockme) saveConfig() {
+
+	// don't save Source if from Cwd
+	var savedSrc string
+	if dm.srcFromCwd {
+		savedSrc = dm.Source
+		dm.Source = ""
 	}
 
-	// cmd is bash
-	if dm.cmd == "" {
-		dm.cmd = "bash"
+	data, err := yaml.Marshal(&dm)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	if err = ioutil.WriteFile(dm.config, data, 0644); err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	log.Printf("Wrote %s\n", dm.config)
+
+	if savedSrc != "" {
+		dm.Source = savedSrc
 	}
 }
 
 var templates = map[string]*Dockme{
 	"default": &Dockme{
-		image:       "jmervine/zshrc:latest",
-		name:        "dockme",
-		interactive: true,
-		tty:         true,
-		rm:          true,
-		cmd:         "bash",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
 	},
 	"ruby": &Dockme{
-		image:       "jmervine/herokudev-ruby:latest",
-		name:        "rubydev",
-		interactive: true,
-		tty:         true,
-		rm:          true,
-		cmd:         "bash",
+		Image:       "jmervine/herokudev-ruby:latest",
+		Name:        "rubydev",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
 	},
 	"rails": &Dockme{
-		image:       "jmervine/herokudev-rails:latest",
-		name:        "railsdev",
-		interactive: true,
-		tty:         true,
-		rm:          true,
-		cmd:         "bash",
+		Image:       "jmervine/herokudev-rails:latest",
+		Name:        "railsdev",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
 	},
 	"node": &Dockme{
-		image:       "jmervine/herokudev-node:latest",
-		name:        "nodedev",
-		interactive: true,
-		tty:         true,
-		rm:          true,
-		cmd:         "bash",
+		Image:       "jmervine/herokudev-node:latest",
+		Name:        "nodedev",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
 	},
 	"nodebox": &Dockme{
-		image:       "jmervine/nodebox:latest",
-		name:        "nodeboxdev",
-		interactive: true,
-		tty:         true,
-		rm:          true,
-		cmd:         "bash",
+		Image:       "jmervine/nodebox:latest",
+		Name:        "nodeboxdev",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
 	},
 }
 
@@ -288,8 +312,8 @@ TEMPLATES:
 			Usage: "set docker image template, see TEMPLATES below",
 		},
 		cli.StringFlag{
-			Name:  "image, I",
-			Usage: "set docker image",
+			Name:  "image, i",
+			Usage: "set docker image [required]",
 		},
 		cli.StringFlag{
 			Name:  "source, s",
@@ -298,6 +322,7 @@ TEMPLATES:
 		cli.StringFlag{
 			Name:  "destination, d",
 			Usage: "container source directory",
+			Value: "/src",
 		},
 		cli.StringFlag{
 			Name:  "publish, p",
@@ -308,12 +333,17 @@ TEMPLATES:
 			Usage: "set container workdir",
 		},
 		cli.BoolFlag{
-			Name:  "dryrun",
+			Name:  "dryrun, D",
 			Usage: "show docker command to be run",
 		},
 		cli.BoolFlag{
 			Name:  "save, S",
-			Usage: "save configuration to .dockmerc file",
+			Usage: "save configuration to file",
+		},
+		cli.StringFlag{
+			Name:  "config, C",
+			Usage: "conifguration file path",
+			Value: DEFAULT_CONFIG,
 		},
 		cli.StringFlag{
 			Name:  "expose, E",
@@ -332,7 +362,8 @@ TEMPLATES:
 			Usage: "list of containers to mount volumes from",
 		},
 		cli.StringFlag{
-			Name: "name, n",
+			Name:  "name, n",
+			Value: "dockme",
 		},
 		cli.BoolFlag{
 			Name: "rm, r",
@@ -341,7 +372,7 @@ TEMPLATES:
 			Name: "no-rm, k",
 		},
 		cli.BoolFlag{
-			Name: "interactive, i",
+			Name: "interactive, I",
 		},
 		cli.BoolFlag{
 			Name: "no-interactive, x",
@@ -379,95 +410,119 @@ TEMPLATES:
 	}
 
 	app.Action = func(c *cli.Context) {
-		var template = DEFAULT_TEMPLATE
+		template := DEFAULT_TEMPLATE
 		if c.String("template") != "" {
 			template = c.String("template")
 		}
+		var dockme *Dockme
 
-		dockme := templates[template]
+		config := c.String("config")
+
+		read, err := ioutil.ReadFile(config)
+		if err == nil {
+			if err = yaml.Unmarshal(read, &dockme); err != nil {
+				log.Fatalf("error: %v", err)
+			}
+		} else {
+			dockme = templates[template]
+		}
+
+		dockme.config = config
 
 		if c.String("image") != "" {
-			dockme.image = c.String("image")
+			dockme.Image = c.String("image")
 		}
+
+		// ensure image at least
+		if dockme.Image == "" {
+			cli.ShowAppHelp(c)
+			os.Exit(1)
+		}
+
 		if c.String("source") != "" {
-			dockme.source = c.String("source")
+			dockme.Source = c.String("source")
 		}
 		if c.String("destination") != "" {
-			dockme.destination = c.String("destination")
-		}
-		if c.String("publish") != "" {
-			dockme.publish = c.String("publish")
+			dockme.Destination = c.String("destination")
 		}
 		if c.String("workdir") != "" {
-			dockme.workdir = c.String("workdir")
+			dockme.Workdir = c.String("workdir")
 		}
 		if c.String("name") != "" {
-			dockme.name = c.String("name")
+			dockme.Name = c.String("name")
 		}
 		if c.String("entrypoint") != "" {
-			dockme.entrypoint = c.String("entrypoint")
+			dockme.Entrypoint = c.String("entrypoint")
 		}
 		if c.String("user") != "" {
-			dockme.user = c.String("user")
+			dockme.User = c.String("user")
 		}
 		if c.String("hostname") != "" {
-			dockme.hostname = c.String("hostname")
+			dockme.Hostname = c.String("hostname")
 		}
 		if c.String("domainname") != "" {
-			dockme.domainname = c.String("domainname")
+			dockme.Domainname = c.String("domainname")
 		}
 		if c.String("mac-address") != "" {
-			dockme.macAddress = c.String("mac-address")
+			dockme.MacAddress = c.String("mac-address")
 		}
 		if c.String("cpuset") != "" {
-			dockme.cpuset = c.String("cpuset")
+			dockme.Cpuset = c.String("cpuset")
 		}
 		if c.Int("memory") > 0 {
-			dockme.memory = c.Int("memory")
+			dockme.Memory = c.Int("memory")
 		}
 		if c.Int("memory-swap") > 0 {
-			dockme.memorySwap = c.Int("memory-swap")
+			dockme.MemorySwap = c.Int("memory-swap")
 		}
 		if c.Bool("rm") {
-			dockme.rm = c.Bool("rm")
+			dockme.Rm = c.Bool("rm")
 		}
 		if c.Bool("no-rm") {
-			dockme.rm = false
+			dockme.Rm = false
 		}
 		if c.Bool("interactive") {
-			dockme.interactive = c.Bool("interactive")
+			dockme.Interactive = c.Bool("interactive")
 		}
 		if c.Bool("no-interactive") {
-			dockme.interactive = false
+			dockme.Interactive = false
 		}
 		if c.Bool("tty") {
-			dockme.tty = c.Bool("tty")
+			dockme.Tty = c.Bool("tty")
 		}
 		if c.Bool("no-tty") {
-			dockme.tty = false
+			dockme.Tty = false
 		}
 		if c.Bool("dryrun") {
 			dockme.dryrun = c.Bool("dryrun")
 		}
 		if c.Bool("save") {
-			dockme.save = c.Bool("save")
+			dockme.save = true
 		}
 		if c.String("expose") != "" {
-			dockme.expose = split(c.String("expose"))
+			dockme.Expose = split(c.String("expose"))
 		}
 		if c.String("env") != "" {
-			dockme.env = split(c.String("env"))
+			dockme.Env = split(c.String("env"))
 		}
 		if c.String("volume") != "" {
-			dockme.volume = split(c.String("volume"))
+			dockme.Volume = split(c.String("volume"))
 		}
 		if c.String("volumes-from") != "" {
-			dockme.volumesFrom = split(c.String("volumes-from"))
+			dockme.VolumesFrom = split(c.String("volumes-from"))
+		}
+		if c.String("publish") != "" {
+			dockme.Publish = split(c.String("publish"))
 		}
 
-		dockme.cmd = strings.Join(c.Args(), " ")
+		dockme.Cmd = strings.Join(c.Args(), " ")
 
 		dockme.applyDefaults()
+
+		if dockme.save {
+			dockme.saveConfig()
+		}
+
 		dockme.exec()
 	}
 	app.Run(os.Args)

@@ -1,0 +1,7 @@
+hostname: herokudev-ruby
+image: jmervine/herokudev-ruby:latest
+name: dockme
+destination: /src
+rm: true
+interactive: true
+tty: true
