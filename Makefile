@@ -19,7 +19,8 @@ build:
 
 docker/build: fetch clean
 	bash ./scripts/build.all.bash
-	find builds | xargs chmod 777
+	find builds | grep -v "*.md5" | xargs chmod 755
+	find builds -type f -name "*.md5" | xargs chmod 644
 
 clean:
 	rm -rf builds
