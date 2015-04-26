@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.2.0"
+const VERSION = "0.2.1"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
@@ -33,7 +33,6 @@ type Dockme struct {
 	Entrypoint  string `yaml:"entrypoint,omitempty"`
 	Cmd         string `yaml:"command,omitempty"`
 	Source      string `yaml:"source,omitempty"`
-	srcFromCwd  bool   // don't save source
 	Destination string `yaml:"destination,omitempty"`
 	config      string
 
@@ -44,8 +43,10 @@ type Dockme struct {
 	Rm          bool `yaml:"rm,omitempty"`
 	Interactive bool `yaml:"interactive,omitempty"`
 	Tty         bool `yaml:"tty,omitempty"`
+	Sudo        bool `yaml:"sudo,omitempty"`
 	dryrun      bool
 	save        bool
+	srcFromCwd  bool // don't save source
 
 	Expose      []string `yaml:"expose,omitempty,flow"`
 	Env         []string `yaml:"env,omitempty,flow"`
@@ -165,15 +166,24 @@ func (dm *Dockme) args() []string {
 }
 
 func (dm *Dockme) exec() {
-	args := dm.args()
+	var exe string
+	var args []string
+	if dm.Sudo {
+		exe = "sudo"
+		args = []string{DOCKER}
+		args = append(args, dm.args()...)
+	} else {
+		exe = DOCKER
+		args = dm.args()
+	}
 
-	fmt.Printf("+ %s %s\n", DOCKER, strings.Join(args, " "))
+	fmt.Printf("+ %s %s\n", exe, strings.Join(args, " "))
 	if dm.dryrun {
 		fmt.Println("")
 		os.Exit(0)
 	}
 
-	cmd := exec.Command(DOCKER, args...)
+	cmd := exec.Command(exe, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -279,6 +289,22 @@ var templates = map[string]*Dockme{
 		Rm:          true,
 		Cmd:         "bash",
 	},
+	"python2": &Dockme{
+		Image:       "python:2-slim",
+		Name:        "python",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
+	},
+	"python3": &Dockme{
+		Image:       "python:3-slim",
+		Name:        "python",
+		Interactive: true,
+		Tty:         true,
+		Rm:          true,
+		Cmd:         "bash",
+	},
 }
 
 func main() {
@@ -310,10 +336,11 @@ OPTIONS:
     {{end}}
 TEMPLATES:
     nodebox    nodebox template w/ 'jmervine/nodebox:latest'
-    default    default template w/ 'jmervine/zshrc:latest'
     ruby       ruby template w/ 'jmervine/herokudev-ruby:latest'
     rails      rails template w/ 'jmervine/herokudev-rails:latest'
     node       node template w/ 'jmervine/herokudev-node:latest'
+    python2    python template w/ 'python:2-slim'
+    python3    python template w/ 'python:3-slim'
     help       Shows a list of commands or help for one command
 
 `
@@ -374,6 +401,10 @@ TEMPLATES:
 		},
 		cli.StringFlag{
 			Name: "name, n",
+		},
+		cli.BoolFlag{
+			Name:  "sudo",
+			Usage: "run Docker with sudo",
 		},
 		cli.BoolFlag{
 			Name: "rm, r",
@@ -484,6 +515,9 @@ TEMPLATES:
 		}
 		if c.Int("memory-swap") > 0 {
 			dockme.MemorySwap = c.Int("memory-swap")
+		}
+		if c.Bool("sudo") {
+			dockme.Sudo = c.Bool("sudo")
 		}
 		if c.Bool("rm") {
 			dockme.Rm = c.Bool("rm")

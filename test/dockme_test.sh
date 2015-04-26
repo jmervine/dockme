@@ -18,7 +18,7 @@ function run_tests {
     "show usage without image"
 
   assert_grep "$CMD_W_IMG --image jmervine/nodebox" \
-    "+ docker run --name=dockme --hostname=nodebox --rm --tty --interactive --volume=" \
+    "+ docker run --hostname=nodebox --rm --tty --interactive --volume=" \
     "show expected defaults"
 
   assert_grep "$CMD_W_IMG --bad" "^Incorrect Usage." \
@@ -31,6 +31,10 @@ function run_tests {
   assert_grep "$CMD_W_IMG --workdir=/foo" \
     " --workdir=/foo" \
     "verify arg with equal"
+
+  assert_grep "$CMD_W_IMG -T ruby --sudo" \
+    "+ sudo docker run " \
+    "verify sudo"
 
   assert_grep "$CMD_WO_IMG -T ruby" \
     "ruby:latest" \

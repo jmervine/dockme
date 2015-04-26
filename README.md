@@ -24,7 +24,7 @@ USAGE:
     Dockme [arguments...] [command]
 
 VERSION:
-    0.2.0
+    0.2.1
 
 AUTHOR:
     Joshua Mervine
@@ -48,6 +48,7 @@ OPTIONS:
     --volume, -V 		list of volume mounts
     --volumes-from 		list of containers to mount volumes from
     --name, -n
+    --sudo			run Docker with sudo
     --rm, -r
     --no-rm, -k
     --interactive, -I
@@ -67,10 +68,11 @@ OPTIONS:
 
 TEMPLATES:
     nodebox    nodebox template w/ 'jmervine/nodebox:latest'
-    default    default template w/ 'jmervine/zshrc:latest'
     ruby       ruby template w/ 'jmervine/herokudev-ruby:latest'
     rails      rails template w/ 'jmervine/herokudev-rails:latest'
     node       node template w/ 'jmervine/herokudev-node:latest'
+    python2    python template w/ 'python:2-slim'
+    python3    python template w/ 'python:3-slim'
     help       Shows a list of commands or help for one command
 
 ```

@@ -25,4 +25,17 @@ clean:
 	rm -rf builds
 	rm -rf test/shunt.sh
 
-.PHONY: test
+examples:
+	go run dockme.go -D --save --sudo -T ruby -C Dockme.yml.example
+	go run dockme.go -D --save --sudo -T node -C ./examples/SudoNode.yml
+	go run dockme.go -D --save -T node -C ./examples/Node.yml
+	go run dockme.go -D --save -T nodebox -C ./examples/Nodebox.yml
+	go run dockme.go -D --save -T ruby -C ./examples/Ruby.yml
+	go run dockme.go -D --save -T rails -C ./examples/Rails.yml
+	go run dockme.go -D --save -T rails -C ./examples/Rails.yml
+	go run dockme.go -D --save -T python2 -C ./examples/Python2.yml
+	go run dockme.go -D --save -T python3 -C ./examples/Python3.yml
+
+finalize: clean test build examples
+
+.PHONY: test examples
