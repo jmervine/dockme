@@ -1,6 +1,25 @@
 # dockme
 Simple docker wrapper for quickly spooling up containerized development environments.
 
+```
+jmervine@home testapp $ dockme -T nodebox --hostname testapp --save --sudo
+2015/04/25 17:52:44 Wrote Dockme.yml
++ sudo docker run --name=nodeboxdev --hostname=testapp --workdir=/src --rm --tty --interactive --volume=/home/jmervine/Development/testapp:/src jmervine/nodebox:latest bash
+[sudo] password for jmervine:
+
+bash-4.3# node index.js
+test app
+
+bash-4.3# exit
+exit
+
+jmervine@home testapp $ dockme
++ sudo docker run --name=nodeboxdev --hostname=testapp --workdir=/src --rm --tty --interactive --volume=/home/jmervine/Development/testapp:/src jmervine/nodebox:latest bash
+
+bash-4.3# node index.js
+test app
+```
+
 ## Install
 
 > Install Docker, of course
