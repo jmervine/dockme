@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.2.1"
+const VERSION = "0.2.2"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
@@ -211,6 +211,10 @@ func (dm *Dockme) applyDefaults() {
 
 	if dm.Destination == "" {
 		dm.Destination = "/src"
+	}
+
+	if dm.Workdir == "" {
+		dm.Workdir = dm.Destination
 	}
 
 	if dm.Cmd == "" {

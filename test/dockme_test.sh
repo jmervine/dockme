@@ -18,7 +18,7 @@ function run_tests {
     "show usage without image"
 
   assert_grep "$CMD_W_IMG --image jmervine/nodebox" \
-    "+ docker run --hostname=nodebox --rm --tty --interactive --volume=" \
+    "+ docker run --hostname=nodebox --workdir=/src --rm --tty --interactive --volume=" \
     "show expected defaults"
 
   assert_grep "$CMD_W_IMG --bad" "^Incorrect Usage." \
