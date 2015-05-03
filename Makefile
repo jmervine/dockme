@@ -1,10 +1,12 @@
 prefix?=$(HOME)/.bin
 
 fetch:
-	go get
+	go get github.com/codegangsta/cli
+	go get gopkg.in/yaml.v2
 
-install: fetch
-	go install
+install:
+	cd bin; go build -o dockme
+	cd bin; install -m 0755 dockme $(GOBIN)
 
 test: test/shunt.sh fetch
 	@./test/shunt.sh --verbose ./test/dockme_test.sh
@@ -15,7 +17,8 @@ test/shunt.sh:
 	install -m 0755 /tmp/shunt.sh test
 
 build:
-	go run dockme.go --config Buildme.yml
+	go run bin/dockme.go --config Buildme.yml
+	-sudo chown -R $(USER): builds
 
 docker/build: fetch clean
 	bash ./scripts/build.all.bash
@@ -27,15 +30,15 @@ clean:
 	rm -rf test/shunt.sh
 
 examples:
-	go run dockme.go -D --save --sudo -T ruby -C Dockme.yml.example
-	go run dockme.go -D --save --sudo -T node -C ./examples/SudoNode.yml
-	go run dockme.go -D --save -T node -C ./examples/Node.yml
-	go run dockme.go -D --save -T nodebox -C ./examples/Nodebox.yml
-	go run dockme.go -D --save -T ruby -C ./examples/Ruby.yml
-	go run dockme.go -D --save -T rails -C ./examples/Rails.yml
-	go run dockme.go -D --save -T rails -C ./examples/Rails.yml
-	go run dockme.go -D --save -T python2 -C ./examples/Python2.yml
-	go run dockme.go -D --save -T python3 -C ./examples/Python3.yml
+	go run bin/dockme.go -D --save --sudo -T ruby -C Dockme.yml.example
+	go run bin/dockme.go -D --save --sudo -T node -C ./examples/SudoNode.yml
+	go run bin/dockme.go -D --save -T node -C ./examples/Node.yml
+	go run bin/dockme.go -D --save -T nodebox -C ./examples/Nodebox.yml
+	go run bin/dockme.go -D --save -T ruby -C ./examples/Ruby.yml
+	go run bin/dockme.go -D --save -T rails -C ./examples/Rails.yml
+	go run bin/dockme.go -D --save -T rails -C ./examples/Rails.yml
+	go run bin/dockme.go -D --save -T python2 -C ./examples/Python2.yml
+	go run bin/dockme.go -D --save -T python3 -C ./examples/Python3.yml
 
 finalize: clean test build examples
 
