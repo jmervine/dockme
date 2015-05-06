@@ -20,7 +20,7 @@ do
   goos=${split[0]}
   goarch=${split[1]}
 
-  src=dockme.go
+  src=bin/dockme.go
   target=builds/$goos/$goarch
 
   [[ "windows" == "$goos" ]] && target=$target/dockme.exe

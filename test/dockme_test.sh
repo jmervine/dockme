@@ -8,8 +8,8 @@ function run_tests {
     mv Dockme.yml .dockme.bak
   fi
 
-  CMD_WO_IMG="go run dockme.go --dryrun"
-  CMD_W_IMG="go run dockme.go --image jmervine/nodebox --dryrun"
+  CMD_WO_IMG="go run bin/dockme.go --dryrun"
+  CMD_W_IMG="go run bin/dockme.go --image jmervine/nodebox --dryrun"
 
   assert_grep "$CMD_W_IMG --help" "USAGE:" \
     "deplay usage with help"
