@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.3.1"
+const VERSION = "0.3.2"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
@@ -296,6 +296,7 @@ var Templates = map[string]*Dockme{
 	"rails": &Dockme{
 		Image:       "jmervine/herokudev-rails:latest",
 		Name:        "railsdev",
+		Publish:     []string{"3000:3000"},
 		Interactive: true,
 		Tty:         true,
 		Rm:          true,

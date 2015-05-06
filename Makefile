@@ -30,6 +30,7 @@ clean:
 	rm -rf test/shunt.sh
 
 examples:
+	rm Dockme.yml.example ./examples/*.yml
 	go run bin/dockme.go -D --save --sudo -T ruby -C Dockme.yml.example
 	go run bin/dockme.go -D --save --sudo -T node -C ./examples/SudoNode.yml
 	go run bin/dockme.go -D --save -T node -C ./examples/Node.yml
