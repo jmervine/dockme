@@ -43,7 +43,7 @@ USAGE:
     Dockme [arguments...] [command]
 
 VERSION:
-    0.2.1
+    0.3.1
 
 AUTHOR:
     Joshua Mervine
@@ -64,6 +64,7 @@ OPTIONS:
     --config, -C "Dockme.yml"	conifguration file path
     --expose, -E 		list of ports to expose
     --env, -e 			list of environments
+    --link, -l 			list of links
     --volume, -V 		list of volume mounts
     --volumes-from 		list of containers to mount volumes from
     --name, -n
