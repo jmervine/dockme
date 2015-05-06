@@ -43,7 +43,7 @@ USAGE:
     Dockme [arguments...] [command]
 
 VERSION:
-    0.3.1
+    0.3.3
 
 AUTHOR:
     Joshua Mervine

@@ -256,6 +256,9 @@ TEMPLATES:
 		if c.String("env") != "" {
 			dm.Env = split(c.String("env"))
 		}
+		if c.String("link") != "" {
+			dm.Links = split(c.String("link"))
+		}
 		if c.String("volume") != "" {
 			dm.Volume = split(c.String("volume"))
 		}
