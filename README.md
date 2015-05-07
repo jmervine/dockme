@@ -77,7 +77,7 @@ OPTIONS:
     --no-tty, -N
     --entrypoint
     --user
-    --hostname
+    --hostname, -H
     --domainname
     --mac-address
     --cpuset

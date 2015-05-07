@@ -138,7 +138,7 @@ TEMPLATES:
 			Name: "user",
 		},
 		cli.StringFlag{
-			Name: "hostname",
+			Name: "hostname, H",
 		},
 		cli.StringFlag{
 			Name: "domainname",
