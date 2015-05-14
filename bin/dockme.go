@@ -95,6 +95,10 @@ TEMPLATES:
 			Usage: "list of environments",
 		},
 		cli.StringFlag{
+			Name:  "env-file",
+			Usage: "list of environment files",
+		},
+		cli.StringFlag{
 			Name:  "link, l",
 			Usage: "list of links",
 		},
@@ -255,6 +259,9 @@ TEMPLATES:
 		}
 		if c.String("env") != "" {
 			dm.Env = split(c.String("env"))
+		}
+		if c.String("env-file") != "" {
+			dm.EnvFile = split(c.String("env-file"))
 		}
 		if c.String("link") != "" {
 			dm.Links = split(c.String("link"))

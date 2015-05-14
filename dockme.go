@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.3.4"
+const VERSION = "0.3.5"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
@@ -49,6 +49,7 @@ type Dockme struct {
 
 	Expose      []string `yaml:"expose,omitempty,flow"`
 	Env         []string `yaml:"env,omitempty,flow"`
+	EnvFile     []string `yaml:"env_file,omitempty,flow"`
 	Links       []string `yaml:"link,omitempty,flow"`
 	Volume      []string `yaml:"volume,omitempty,flow"`
 	VolumesFrom []string `yaml:"volumes_from,omitempty,flow"`
@@ -134,6 +135,12 @@ func (dm *Dockme) Args() []string {
 	if len(dm.Env) > 0 {
 		for _, e := range dm.Env {
 			args = append(args, fmt.Sprintf("--env=%s", e))
+		}
+	}
+
+	if len(dm.EnvFile) > 0 {
+		for _, e := range dm.EnvFile {
+			args = append(args, fmt.Sprintf("--env-file=%s", e))
 		}
 	}
 

@@ -64,6 +64,7 @@ OPTIONS:
     --config, -C "Dockme.yml"	conifguration file path
     --expose, -E 		list of ports to expose
     --env, -e 			list of environments
+    --env-file			list of environment files
     --link, -l 			list of links
     --volume, -V 		list of volume mounts
     --volumes-from 		list of containers to mount volumes from
