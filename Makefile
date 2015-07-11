@@ -1,14 +1,14 @@
 prefix?=$(HOME)/.bin
 
-fetch:
-	go get github.com/codegangsta/cli
-	go get gopkg.in/yaml.v2
+update:
+	go get -u github.com/tools/godep
+	godep update ./...
 
 install:
 	cd bin; go build -o dockme
 	cd bin; install -m 0755 dockme $(GOBIN)
 
-test: test/shunt.sh fetch
+test: test/shunt.sh
 	@./test/shunt.sh --verbose ./test/dockme_test.sh
 
 test/shunt.sh:
@@ -20,7 +20,7 @@ build:
 	go run bin/dockme.go --config Buildme.yml
 	-sudo chown -R $(USER): builds
 
-docker/build: fetch clean
+docker/build: clean
 	bash ./scripts/build.all.bash
 	find builds | grep -v "*.md5" | xargs chmod 755
 	find builds -type f -name "*.md5" | xargs chmod 644

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/jmervine/dockme"
-	"gopkg.in/yaml.v2"
+	"github.com/jmervine/dockme/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"github.com/jmervine/dockme/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"

@@ -5,7 +5,7 @@ package dockme
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"github.com/jmervine/dockme/Godeps/_workspace/src/gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
