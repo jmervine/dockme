@@ -27,8 +27,13 @@ test app
 > * https://docs.docker.com/installation/
 
 ```text
+# versioned
+go get gopkg.in/jmervine/dockme.v1
+cd $(go env GOPATH)/src/gopkg.in/jmervine/dockme.v1
+make install
+
+# from github
 go get github.com/jmervine/dockme
-go install github.com/jmervine/dockme
 ```
 
 Or see binaries in the `builds` directory.
