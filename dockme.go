@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.3.5"
+const VERSION = "1.0.0"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
