@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const VERSION = "1.0.0"
+const VERSION = "1.0.1"
 const DOCKER = "docker"
 const ACTION = "run"
 const DEFAULT_TEMPLATE = "default"
@@ -293,7 +293,7 @@ var Templates = map[string]*Dockme{
 		Cmd:         "bash",
 	},
 	"ruby": &Dockme{
-		Image:       "jmervine/herokudev-ruby:latest",
+		Image:       "jmervine/miniruby:latest",
 		Name:        "rubydev",
 		Interactive: true,
 		Tty:         true,
@@ -301,7 +301,7 @@ var Templates = map[string]*Dockme{
 		Cmd:         "bash",
 	},
 	"rails": &Dockme{
-		Image:       "jmervine/herokudev-rails:latest",
+		Image:       "jmervine/minirails:latest",
 		Name:        "railsdev",
 		Publish:     []string{"3000:3000"},
 		Interactive: true,
@@ -310,23 +310,15 @@ var Templates = map[string]*Dockme{
 		Cmd:         "bash",
 	},
 	"node": &Dockme{
-		Image:       "jmervine/herokudev-node:latest",
+		Image:       "jmervine/mininode:latest",
 		Name:        "nodedev",
 		Interactive: true,
 		Tty:         true,
 		Rm:          true,
 		Cmd:         "bash",
 	},
-	"nodebox": &Dockme{
-		Image:       "jmervine/nodebox:latest",
-		Name:        "nodeboxdev",
-		Interactive: true,
-		Tty:         true,
-		Rm:          true,
-		Cmd:         "bash",
-	},
 	"python2": &Dockme{
-		Image:       "python:2-slim",
+		Image:       "jmervine/minipy:2",
 		Name:        "python",
 		Interactive: true,
 		Tty:         true,
@@ -334,7 +326,7 @@ var Templates = map[string]*Dockme{
 		Cmd:         "bash",
 	},
 	"python3": &Dockme{
-		Image:       "python:3-slim",
+		Image:       "jmervine/minipy:3",
 		Name:        "python",
 		Interactive: true,
 		Tty:         true,

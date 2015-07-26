@@ -38,12 +38,11 @@ OPTIONS:
     {{range .Flags}}{{.}}
     {{end}}
 TEMPLATES:
-    nodebox    nodebox template w/ 'jmervine/nodebox:latest'
-    ruby       ruby template w/ 'jmervine/herokudev-ruby:latest'
-    rails      rails template w/ 'jmervine/herokudev-rails:latest'
-    node       node template w/ 'jmervine/herokudev-node:latest'
-    python2    python template w/ 'python:2-slim'
-    python3    python template w/ 'python:3-slim'
+    node       node template w/ 'jmervine/mininode:latest'
+    ruby       ruby template w/ 'jmervine/miniruby:latest'
+    rails      rails template w/ 'jmervine/minirails:latest'
+    python2    python template w/ 'jmervine/minipy:2'
+    python3    python template w/ 'jmervine/minipy:3'
     help       Shows a list of commands or help for one command
 
 `
