@@ -1,3 +1,7 @@
+> ## Archived
+>
+> This was fun endevor, but docker-compose is now good enough, with a few shell funtions to make this unnecessary. 
+
 # dockme
 Simple docker wrapper for quickly spooling up containerized development environments.
 
